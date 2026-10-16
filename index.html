@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#101426" />
+  <meta name="description" content="Turn text into a unique, shareable link. No account required." />
+  <title>Textlink — Share text with a link</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d1020;
+      --panel: rgba(22, 27, 49, 0.86);
+      --panel-border: rgba(255, 255, 255, 0.1);
+      --muted: #a5aec9;
+      --text: #f5f7ff;
+      --accent: #9a8cff;
+      --accent-2: #6ee7d8;
+      --danger: #ff9b9b;
+    }
+    * { box-sizing: border-box; }
+    html { min-height: 100%; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(ellipse at 15% 8%, rgba(111, 91, 255, 0.20), transparent 35%),
+        radial-gradient(ellipse at 88% 78%, rgba(36, 209, 190, 0.11), transparent 32%),
+        var(--bg);
+    }
+    button, textarea, input { font: inherit; }
+    button { cursor: pointer; }
+    .site-shell { width: min(100% - 32px, 820px); margin: 0 auto; padding: 28px 0 42px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 68px; }
+    .brand { display: inline-flex; align-items: center; gap: 11px; font-size: 15px; font-weight: 750; letter-spacing: .09em; }
+    .brand-mark { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid rgba(255,255,255,.18); border-radius: 12px; background: linear-gradient(140deg, rgba(154,140,255,.25), rgba(110,231,216,.12)); box-shadow: inset 0 1px 0 rgba(255,255,255,.12); }
+    .brand-mark svg { width: 19px; height: 19px; }
+    .pill { border: 1px solid rgba(255,255,255,.12); border-radius: 999px; padding: 8px 12px; color: #c3cbe1; font-size: 12px; white-space: nowrap; background: rgba(255,255,255,.035); }
+    .hero { text-align: center; margin: 0 auto 30px; max-width: 680px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 17px; color: #c4bcff; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .eyebrow-dot { width: 6px; height: 6px; border-radius: 99px; background: var(--accent-2); box-shadow: 0 0 12px rgba(110,231,216,.65); }
+    h1 { margin: 0; font-size: clamp(35px, 6vw, 57px); line-height: 1.05; letter-spacing: -.048em; font-weight: 780; }
+    .gradient-text { background: linear-gradient(95deg, #c5bbff 12%, #8cebe0 90%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .hero p { max-width: 510px; margin: 19px auto 0; color: var(--muted); font-size: 16px; line-height: 1.7; }
+    .panel { border: 1px solid var(--panel-border); border-radius: 24px; padding: 24px; background: var(--panel); box-shadow: 0 22px 80px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.04); backdrop-filter: blur(18px); }
+    .field-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    label { font-size: 14px; font-weight: 650; color: #edf0ff; }
+    .counter { font-size: 12px; color: #8994b4; font-variant-numeric: tabular-nums; }
+    textarea { display: block; width: 100%; min-height: 190px; resize: vertical; border: 1px solid rgba(190,197,255,.15); outline: none; border-radius: 15px; padding: 17px; color: var(--text); line-height: 1.65; background: rgba(8, 11, 25, .58); transition: border-color .18s ease, box-shadow .18s ease; }
+    textarea::placeholder { color: #69738f; }
+    textarea:focus, .link-input:focus { border-color: rgba(154,140,255,.82); box-shadow: 0 0 0 4px rgba(154,140,255,.12); }
+    .field-help { min-height: 18px; margin: 10px 1px 0; color: #8f9ab8; font-size: 12px; line-height: 1.5; }
+    .field-help.error { color: var(--danger); }
+    .primary-button { display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; min-height: 52px; margin-top: 20px; padding: 14px 18px; border: 0; border-radius: 14px; color: #101326; font-weight: 760; background: linear-gradient(100deg, #bcb1ff, #8debe0); box-shadow: 0 8px 26px rgba(126, 151, 255, .14); transition: transform .15s ease, filter .15s ease, opacity .15s ease; }
+    .primary-button:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.05); }
+    .primary-button:active:not(:disabled) { transform: translateY(0); }
+    .primary-button:disabled { cursor: not-allowed; opacity: .4; }
+    .primary-button svg { width: 18px; height: 18px; }
+    .result { display: none; margin-top: 18px; padding: 18px; border: 1px solid rgba(110,231,216,.22); border-radius: 17px; background: rgba(38, 103, 101, .12); }
+    .result.visible { display: block; animation: reveal .24s ease both; }
+    @keyframes reveal { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    .result-heading { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; font-size: 14px; font-weight: 750; }
+    .success-icon { display: grid; place-items: center; flex: 0 0 26px; height: 26px; border-radius: 50%; color: #091f1d; background: var(--accent-2); }
+    .success-icon svg { width: 15px; height: 15px; }
+    .link-row { display: flex; gap: 9px; }
+    .link-input { min-width: 0; flex: 1; padding: 12px 13px; border: 1px solid rgba(255,255,255,.12); border-radius: 11px; outline: none; color: #dbe2ff; background: rgba(6,9,20,.7); font-size: 13px; }
+    .secondary-button { flex: 0 0 auto; display: inline-flex; justify-content: center; align-items: center; gap: 8px; padding: 0 14px; border: 1px solid rgba(255,255,255,.15); border-radius: 11px; color: #f1f3ff; background: rgba(255,255,255,.07); font-weight: 650; font-size: 13px; transition: background .15s ease; }
+    .secondary-button:hover { background: rgba(255,255,255,.12); }
+    .secondary-button svg { width: 16px; height: 16px; }
+    .result-note { margin: 12px 0 0; color: #a2b6c7; font-size: 12px; line-height: 1.6; }
+    .result-actions { display: flex; gap: 17px; margin-top: 13px; font-size: 12px; }
+    .text-action { padding: 0; border: 0; color: #c2baff; background: transparent; text-decoration: none; }
+    .text-action:hover { color: #e1dcff; text-decoration: underline; }
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 22px; }
+    .feature { display: flex; align-items: flex-start; gap: 10px; padding: 14px 13px; border: 1px solid rgba(255,255,255,.075); border-radius: 14px; background: rgba(255,255,255,.025); }
+    .feature svg { flex: 0 0 17px; width: 17px; height: 17px; margin-top: 1px; color: #a9a0ff; }
+    .feature strong { display: block; margin-bottom: 4px; color: #e9ecfb; font-size: 12px; }
+    .feature span { display: block; color: #909bb8; font-size: 11px; line-height: 1.5; }
+    .notice { max-width: 620px; margin: 24px auto 0; color: #828ca9; text-align: center; font-size: 11px; line-height: 1.7; }
+    .viewer-shell { width: min(100% - 32px, 820px); min-height: 100vh; margin: 0 auto; display: flex; align-items: center; justify-content: center; padding: 42px 0; }
+    .viewer-text { width: 100%; margin: 0; color: #f6f7ff; font-size: clamp(21px, 3.4vw, 32px); line-height: 1.7; font-weight: 520; overflow-wrap: anywhere; white-space: pre-wrap; word-break: break-word; }
+    .error-view { color: #f5f7ff; font-size: 16px; line-height: 1.7; text-align: center; }
+    .error-view p { margin: 0 0 18px; color: #a5aec9; }
+    .error-view a { color: #c2baff; }
+    .footer { margin-top: 40px; text-align: center; color: #606b88; font-size: 11px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    @media (max-width: 620px) {
+      .site-shell { padding-top: 18px; }
+      .topbar { margin-bottom: 51px; }
+      .pill { font-size: 10px; padding: 7px 9px; }
+      .hero p { font-size: 14px; }
+      .panel { padding: 16px; border-radius: 19px; }
+      textarea { min-height: 175px; }
+      .features { grid-template-columns: 1fr; gap: 8px; }
+      .feature { align-items: center; }
+      .feature span { font-size: 12px; }
+      .link-row { flex-direction: column; }
+      .secondary-button { min-height: 44px; }
+      .link-input { min-height: 44px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+    (() => {
+      'use strict';
+
+      const app = document.getElementById('app');
+      const MAX_CHARS = 6000;
+      const icon = {
+        link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+        arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg>',
+        copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>',
+        check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>',
+        shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/></svg>',
+        spark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-2-5.8L4 11l6-2.2L12 3Z"/><path d="m19 14 1 2.5 2 1-2 1-1 2.5-1-2.5-2-1 2-1 1-2.5Z"/></svg>',
+        clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
+      };
+
+      function bytesToBase64Url(bytes) {
+        let binary = '';
+        const chunkSize = 0x8000;
+        for (let i = 0; i < bytes.length; i += chunkSize) {
+          binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+        }
+        return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+      }
+
+      function base64UrlToBytes(value) {
+        const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
+        const padded = base64 + '='.repeat((4 - base64.length % 4) % 4);
+        const binary = atob(padded);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        return bytes;
+      }
+
+      function makeId() {
+        if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+          return window.crypto.randomUUID().replace(/-/g, '');
+        }
+        const bytes = new Uint8Array(16);
+        if (window.crypto && window.crypto.getRandomValues) window.crypto.getRandomValues(bytes);
+        else for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+        return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+      }
+
+      function createBaseUrl() {
+        const url = new URL(window.location.href);
+        url.hash = '';
+        url.search = '';
+        return url.href;
+      }
+
+      function showCreator() {
+        document.title = 'Textlink — Share text with a link';
+        document.body.className = '';
+        app.innerHTML = `
+          <main class="site-shell">
+            <header class="topbar">
+              <div class="brand"><span class="brand-mark">${icon.link}</span><span>TEXTLINK</span></div>
+              <div class="pill">No account needed</div>
+            </header>
+            <section class="hero" aria-labelledby="page-title">
+              <div class="eyebrow"><span class="eyebrow-dot"></span> Simple text sharing</div>
+              <h1 id="page-title">Your text.<br><span class="gradient-text">One unique link.</span></h1>
+              <p>Type or paste anything below. Create a link, share it anywhere, and it opens directly to your text.</p>
+            </section>
+            <section class="panel" aria-label="Create a text link">
+              <div class="field-heading">
+                <label for="text-input">Your text</label>
+                <span class="counter" id="counter">0 / ${MAX_CHARS.toLocaleString()}</span>
+              </div>
+              <textarea id="text-input" maxlength="${MAX_CHARS}" placeholder="Type or paste your text here…&#10;&#10;Line breaks are preserved in the shared link." aria-describedby="field-help"></textarea>
+              <p class="field-help" id="field-help">Up to ${MAX_CHARS.toLocaleString()} characters. Keep it short for easier sharing.</p>
+              <button class="primary-button" id="create-button" type="button" disabled>${icon.spark}<span>Create shareable link</span></button>
+              <section class="result" id="result" aria-live="polite">
+                <div class="result-heading"><span class="success-icon">${icon.check}</span><span>Your link is ready</span></div>
+                <div class="link-row">
+                  <input class="link-input" id="share-url" aria-label="Generated share link" readonly />
+                  <button class="secondary-button" id="copy-button" type="button">${icon.copy}<span>Copy link</span></button>
+                </div>
+                <p class="result-note">Anyone with this link can view the text. The text is carried inside the link, so no account or database is needed.</p>
+                <div class="result-actions">
+                  <a class="text-action" id="open-link" href="#" target="_blank" rel="noopener">Open link ${icon.arrow}</a>
+                  <button class="text-action" id="new-link" type="button">Create another</button>
+                </div>
+              </section>
+            </section>
+            <section class="features" aria-label="How it works">
+              <div class="feature">${icon.link}<div><strong>Unique every time</strong><span>Even the same text gets a fresh link.</span></div></div>
+              <div class="feature">${icon.shield}<div><strong>No account or database</strong><span>Works on a static website host.</span></div></div>
+              <div class="feature">${icon.clock}<div><strong>No built-in expiry</strong><span>Works while this website stays at the same address.</span></div></div>
+            </section>
+            <p class="notice">Privacy note: the link contains your text in an encoded form, not encrypted form. Do not use it for passwords, private information, or anything you would not share with the link recipient.</p>
+            <footer class="footer">Made for easy sharing.</footer>
+          </main>`;
+
+        const textInput = document.getElementById('text-input');
+        const counter = document.getElementById('counter');
+        const help = document.getElementById('field-help');
+        const createButton = document.getElementById('create-button');
+        const result = document.getElementById('result');
+        const shareUrl = document.getElementById('share-url');
+        const copyButton = document.getElementById('copy-button');
+        const openLink = document.getElementById('open-link');
+        const newLink = document.getElementById('new-link');
+
+        textInput.addEventListener('input', () => {
+          const length = textInput.value.length;
+          counter.textContent = `${length.toLocaleString()} / ${MAX_CHARS.toLocaleString()}`;
+          createButton.disabled = textInput.value.trim().length === 0 || length > MAX_CHARS;
+          help.classList.toggle('error', length >= MAX_CHARS);
+          help.textContent = length >= MAX_CHARS ? `Character limit reached (${MAX_CHARS.toLocaleString()}).` : `Up to ${MAX_CHARS.toLocaleString()} characters. Keep it short for easier sharing.`;
+        });
+
+        createButton.addEventListener('click', () => {
+          const text = textInput.value;
+          if (!text.trim() || text.length > MAX_CHARS) return;
+          try {
+            const payload = bytesToBase64Url(new TextEncoder().encode(text));
+            const link = `${createBaseUrl()}#/view/${makeId()}/${payload}`;
+            shareUrl.value = link;
+            openLink.href = link;
+            result.classList.add('visible');
+            copyButton.innerHTML = `${icon.copy}<span>Copy link</span>`;
+            result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          } catch (error) {
+            help.classList.add('error');
+            help.textContent = 'Could not create this link in your browser. Please try a shorter text.';
+          }
+        });
+
+        copyButton.addEventListener('click', async () => {
+          const original = `${icon.copy}<span>Copy link</span>`;
+          try {
+            if (navigator.clipboard && window.isSecureContext) {
+              await navigator.clipboard.writeText(shareUrl.value);
+            } else {
+              shareUrl.focus();
+              shareUrl.select();
+              const copied = document.execCommand('copy');
+              if (!copied) throw new Error('Clipboard not available');
+            }
+            copyButton.innerHTML = `${icon.check}<span>Copied!</span>`;
+            window.setTimeout(() => { if (copyButton.isConnected) copyButton.innerHTML = original; }, 1800);
+          } catch (error) {
+            shareUrl.focus();
+            shareUrl.select();
+            copyButton.innerHTML = `${icon.copy}<span>Select & copy</span>`;
+          }
+        });
+
+        newLink.addEventListener('click', () => {
+          textInput.value = '';
+          textInput.dispatchEvent(new Event('input'));
+          result.classList.remove('visible');
+          textInput.focus();
+        });
+      }
+
+      function showViewer(payload) {
+        document.title = 'Shared text';
+        document.body.className = 'viewer-mode';
+        app.innerHTML = '<main class="viewer-shell"><p class="viewer-text" id="shared-text"></p></main>';
+        try {
+          const text = new TextDecoder('utf-8', { fatal: true }).decode(base64UrlToBytes(payload));
+          // Render user-provided text as text, never as HTML.
+          document.getElementById('shared-text').textContent = text;
+        } catch (error) {
+          app.innerHTML = `<main class="viewer-shell"><section class="error-view"><p>This share link is incomplete or invalid.</p><a href="${escapeAttribute(createBaseUrl())}">Create a new text link</a></section></main>`;
+        }
+      }
+
+      function escapeAttribute(value) {
+        return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+
+      function route() {
+        const parts = window.location.hash.slice(2).split('/');
+        if (parts[0] === 'view' && parts.length >= 3 && parts[2]) {
+          showViewer(parts.slice(2).join('/'));
+        } else {
+          showCreator();
+        }
+      }
+
+      window.addEventListener('hashchange', route);
+      route();
+    })();
+  </script>
+</body>
+</html>
